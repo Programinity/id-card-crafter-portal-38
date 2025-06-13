@@ -1,8 +1,7 @@
-
 import React, { useRef, useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Trash2, Download, signature } from 'lucide-react';
+import { Trash2, Download, Signature } from 'lucide-react';
 
 interface SignaturePadProps {
   onSignatureChange: (signatureDataUrl: string) => void;

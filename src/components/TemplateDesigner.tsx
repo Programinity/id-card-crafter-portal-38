@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -382,7 +381,7 @@ export const TemplateDesigner: React.FC<TemplateDesignerProps> = ({
                     imageWidth={templateData.frontImageWidth}
                     imageHeight={templateData.frontImageHeight}
                     fields={frontFields}
-                    onFieldsChange={setFrontFields}
+                    onFieldsChange={(fields: TemplateField[]) => setFrontFields(fields)}
                   />
                 </TabsContent>
                 
@@ -393,7 +392,7 @@ export const TemplateDesigner: React.FC<TemplateDesignerProps> = ({
                     imageWidth={templateData.backImageWidth}
                     imageHeight={templateData.backImageHeight}
                     fields={backFields}
-                    onFieldsChange={setBackFields}
+                    onFieldsChange={(fields: TemplateField[]) => setBackFields(fields)}
                   />
                 </TabsContent>
               </Tabs>
