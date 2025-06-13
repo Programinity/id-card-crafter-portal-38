@@ -12,6 +12,8 @@ import { StudentSelector } from './StudentSelector';
 import { TemplateSelector } from './TemplateSelector';
 import { TemplateFieldsLoader } from './TemplateFieldsLoader';
 import { StudentDataRenderer } from './StudentDataRenderer';
+import { IDPictureUpload } from './IDPictureUpload';
+import { SignaturePad } from './SignaturePad';
 import { useIDCardStore } from '../store/useIDCardStore';
 
 interface IDCardDesignerProps {
@@ -57,6 +59,8 @@ export const IDCardDesigner = ({ selectedStudent: propSelectedStudent }: IDCardD
     front: [],
     back: []
   });
+  const [idPicture, setIdPicture] = useState<string>('');
+  const [signature, setSignature] = useState<string>('');
   
   const { 
     frontTemplate, 
@@ -99,6 +103,16 @@ export const IDCardDesigner = ({ selectedStudent: propSelectedStudent }: IDCardD
 
   const handlePreview = () => {
     console.log('Preview mode activated');
+  };
+
+  const handleIDPictureUpload = (imageUrl: string) => {
+    setIdPicture(imageUrl);
+    console.log('ID Picture uploaded:', imageUrl);
+  };
+
+  const handleSignatureChange = (signatureDataUrl: string) => {
+    setSignature(signatureDataUrl);
+    console.log('Signature updated:', signatureDataUrl);
   };
 
   const renderTemplateCanvas = (side: 'front' | 'back') => {
@@ -145,6 +159,28 @@ export const IDCardDesigner = ({ selectedStudent: propSelectedStudent }: IDCardD
             imageWidth={imageWidth || 600}
             imageHeight={imageHeight || 400}
           />
+        )}
+
+        {/* Render ID Picture if available */}
+        {idPicture && (
+          <div className="absolute top-4 right-4">
+            <img
+              src={idPicture}
+              alt="ID Picture"
+              className="w-24 h-24 object-cover rounded border-2 border-white shadow-lg"
+            />
+          </div>
+        )}
+
+        {/* Render Signature if available */}
+        {signature && (
+          <div className="absolute bottom-4 right-4">
+            <img
+              src={signature}
+              alt="Signature"
+              className="w-32 h-16 object-contain bg-white rounded border border-slate-200 shadow-sm"
+            />
+          </div>
         )}
       </div>
     );
@@ -218,6 +254,19 @@ export const IDCardDesigner = ({ selectedStudent: propSelectedStudent }: IDCardD
               <TemplateSelector
                 onTemplateSelect={handleTemplateSelect}
                 selectedTemplateId={selectedTemplate?.id}
+              />
+              
+              {/* ID Picture Upload */}
+              <IDPictureUpload
+                onImageUpload={handleIDPictureUpload}
+                currentImage={idPicture}
+              />
+              
+              {/* Signature Pad */}
+              <SignaturePad
+                onSignatureChange={handleSignatureChange}
+                width={320}
+                height={160}
               />
               
               {/* Design Tools */}

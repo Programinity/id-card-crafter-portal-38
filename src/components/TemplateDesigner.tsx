@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Save, Upload } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useQuery } from '@tanstack/react-query';
 import { FieldsSidebar } from './FieldsSidebar';
 import { TemplateCanvas } from './TemplateCanvas';
 
@@ -22,6 +23,23 @@ interface Template {
   back_image_width: number;
   back_image_height: number;
   is_active: boolean;
+}
+
+interface TemplateField {
+  id: string;
+  field_type: string;
+  field_label: string;
+  x_position: number;
+  y_position: number;
+  width: number;
+  height: number;
+  font_size: number;
+  font_family: string;
+  font_color: string;
+  font_weight: string;
+  font_style: string;
+  text_decoration: string;
+  side: string;
 }
 
 interface TemplateDesignerProps {
@@ -46,13 +64,39 @@ export const TemplateDesigner: React.FC<TemplateDesignerProps> = ({
     backImageWidth: template?.back_image_width || 0,
     backImageHeight: template?.back_image_height || 0,
   });
-  const [frontFields, setFrontFields] = useState<any[]>([]);
-  const [backFields, setBackFields] = useState<any[]>([]);
+  const [frontFields, setFrontFields] = useState<TemplateField[]>([]);
+  const [backFields, setBackFields] = useState<TemplateField[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
 
   const frontInputRef = useRef<HTMLInputElement>(null);
   const backInputRef = useRef<HTMLInputElement>(null);
+
+  // Load existing template fields when editing
+  const { data: existingFields } = useQuery({
+    queryKey: ['templateFields', template?.id],
+    queryFn: async () => {
+      if (!template?.id) return [];
+      const { data, error } = await supabase
+        .from('template_fields')
+        .select('*')
+        .eq('template_id', template.id);
+      
+      if (error) throw error;
+      return data as TemplateField[];
+    },
+    enabled: !!template?.id
+  });
+
+  // Set fields when existing fields are loaded
+  useEffect(() => {
+    if (existingFields) {
+      const frontFieldsData = existingFields.filter(field => field.side === 'front');
+      const backFieldsData = existingFields.filter(field => field.side === 'back');
+      setFrontFields(frontFieldsData);
+      setBackFields(backFieldsData);
+    }
+  }, [existingFields]);
 
   const handleImageUpload = async (file: File, side: 'front' | 'back') => {
     try {

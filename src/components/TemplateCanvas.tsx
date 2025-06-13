@@ -295,6 +295,8 @@ const DraggableTemplateField: React.FC<DraggableTemplateFieldProps> = ({
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    // Start dragging
     setIsDragging(true);
     setDragStart({
       x: e.clientX,
@@ -303,11 +305,39 @@ const DraggableTemplateField: React.FC<DraggableTemplateFieldProps> = ({
       fieldY: field.y_position
     });
     onSelect();
+
+    // Add global mouse event listeners
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      if (isDragging) {
+        const deltaX = moveEvent.clientX - dragStart.x;
+        const deltaY = moveEvent.clientY - dragStart.y;
+        const newX = Math.max(0, Math.min(canvasWidth - field.width, dragStart.fieldX + deltaX));
+        const newY = Math.max(0, Math.min(canvasHeight - field.height, dragStart.fieldY + deltaY));
+        onUpdate(field.id, { x_position: newX, y_position: newY });
+      } else if (isResizing) {
+        const deltaX = moveEvent.clientX - resizeStart.x;
+        const deltaY = moveEvent.clientY - resizeStart.y;
+        const newWidth = Math.max(50, Math.min(canvasWidth - field.x_position, resizeStart.width + deltaX));
+        const newHeight = Math.max(20, Math.min(canvasHeight - field.y_position, resizeStart.height + deltaY));
+        onUpdate(field.id, { width: newWidth, height: newHeight });
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      setIsResizing(false);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
   };
 
   const handleResizeMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
     setIsResizing(true);
     setResizeStart({
       x: e.clientX,
@@ -315,27 +345,26 @@ const DraggableTemplateField: React.FC<DraggableTemplateFieldProps> = ({
       width: field.width,
       height: field.height
     });
-  };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (isDragging) {
-      const deltaX = e.clientX - dragStart.x;
-      const deltaY = e.clientY - dragStart.y;
-      const newX = Math.max(0, Math.min(canvasWidth - field.width, dragStart.fieldX + deltaX));
-      const newY = Math.max(0, Math.min(canvasHeight - field.height, dragStart.fieldY + deltaY));
-      onUpdate(field.id, { x_position: newX, y_position: newY });
-    } else if (isResizing) {
-      const deltaX = e.clientX - resizeStart.x;
-      const deltaY = e.clientY - resizeStart.y;
-      const newWidth = Math.max(50, Math.min(canvasWidth - field.x_position, resizeStart.width + deltaX));
-      const newHeight = Math.max(20, Math.min(canvasHeight - field.y_position, resizeStart.height + deltaY));
-      onUpdate(field.id, { width: newWidth, height: newHeight });
-    }
-  };
+    // Add global mouse event listeners for resize
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      if (isResizing) {
+        const deltaX = moveEvent.clientX - resizeStart.x;
+        const deltaY = moveEvent.clientY - resizeStart.y;
+        const newWidth = Math.max(50, Math.min(canvasWidth - field.x_position, resizeStart.width + deltaX));
+        const newHeight = Math.max(20, Math.min(canvasHeight - field.y_position, resizeStart.height + deltaY));
+        onUpdate(field.id, { width: newWidth, height: newHeight });
+      }
+    };
 
-  const handleMouseUp = () => {
-    setIsDragging(false);
-    setIsResizing(false);
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -357,7 +386,7 @@ const DraggableTemplateField: React.FC<DraggableTemplateFieldProps> = ({
     <div
       className={`absolute cursor-move border-2 ${
         isSelected ? 'border-blue-500 bg-blue-50/20' : 'border-transparent hover:border-slate-400'
-      } rounded transition-all duration-200 select-none`}
+      } ${isDragging ? 'bg-transparent' : ''} rounded transition-all duration-200 select-none`}
       style={{
         left: field.x_position,
         top: field.y_position,
@@ -365,9 +394,6 @@ const DraggableTemplateField: React.FC<DraggableTemplateFieldProps> = ({
         height: field.height,
       }}
       onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
       onKeyDown={handleKeyDown}
       tabIndex={0}
     >
