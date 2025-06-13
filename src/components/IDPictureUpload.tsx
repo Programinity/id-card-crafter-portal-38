@@ -2,7 +2,7 @@
 import React, { useRef, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Upload, Camera } from 'lucide-react';
+import { Upload, Camera, Crop, Move } from 'lucide-react';
 
 interface IDPictureUploadProps {
   onImageUpload: (imageUrl: string) => void;
@@ -15,6 +15,7 @@ export const IDPictureUpload: React.FC<IDPictureUploadProps> = ({
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string>(currentImage || '');
+  const [isDragging, setIsDragging] = useState(false);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -29,6 +30,21 @@ export const IDPictureUpload: React.FC<IDPictureUploadProps> = ({
     }
   };
 
+  const handleDragStart = (event: React.DragEvent) => {
+    if (previewUrl) {
+      setIsDragging(true);
+      event.dataTransfer.setData('application/json', JSON.stringify({
+        type: 'id_picture',
+        label: 'ID Picture',
+        imageUrl: previewUrl
+      }));
+    }
+  };
+
+  const handleDragEnd = () => {
+    setIsDragging(false);
+  };
+
   return (
     <Card className="p-4">
       <h3 className="font-semibold text-slate-800 mb-3">ID Picture</h3>
@@ -36,19 +52,45 @@ export const IDPictureUpload: React.FC<IDPictureUploadProps> = ({
       <div className="space-y-3">
         {previewUrl ? (
           <div className="relative">
-            <img
-              src={previewUrl}
-              alt="ID Picture"
-              className="w-32 h-32 object-cover rounded-lg border-2 border-slate-200"
-            />
-            <Button
-              size="sm"
-              variant="outline"
-              className="absolute top-2 right-2"
-              onClick={() => fileInputRef.current?.click()}
+            <div
+              className={`w-32 h-32 cursor-move border-2 rounded-lg overflow-hidden ${
+                isDragging ? 'border-blue-500 opacity-50' : 'border-slate-200'
+              }`}
+              draggable={true}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
             >
-              <Camera className="w-4 h-4" />
-            </Button>
+              <img
+                src={previewUrl}
+                alt="ID Picture"
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 hover:bg-opacity-30 transition-all">
+                <Move className="w-6 h-6 text-white opacity-0 hover:opacity-100" />
+              </div>
+            </div>
+            <div className="flex gap-2 mt-2">
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Camera className="w-4 h-4 mr-1" />
+                Change
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1"
+              >
+                <Crop className="w-4 h-4 mr-1" />
+                Crop
+              </Button>
+            </div>
+            <p className="text-xs text-slate-600 mt-2 text-center">
+              Drag to place on template
+            </p>
           </div>
         ) : (
           <div 
@@ -68,15 +110,17 @@ export const IDPictureUpload: React.FC<IDPictureUploadProps> = ({
           className="hidden"
         />
         
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full"
-          onClick={() => fileInputRef.current?.click()}
-        >
-          <Upload className="w-4 h-4 mr-2" />
-          {previewUrl ? 'Change Picture' : 'Upload Picture'}
-        </Button>
+        {!previewUrl && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            Upload Picture
+          </Button>
+        )}
       </div>
     </Card>
   );

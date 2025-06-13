@@ -47,6 +47,7 @@ interface TemplateField {
   font_style: string;
   text_decoration: string;
   side: string;
+  image_url?: string;
 }
 
 export const IDCardDesigner = ({ selectedStudent: propSelectedStudent }: IDCardDesignerProps) => {
@@ -160,28 +161,6 @@ export const IDCardDesigner = ({ selectedStudent: propSelectedStudent }: IDCardD
             imageHeight={imageHeight || 400}
           />
         )}
-
-        {/* Render ID Picture if available */}
-        {idPicture && (
-          <div className="absolute top-4 right-4">
-            <img
-              src={idPicture}
-              alt="ID Picture"
-              className="w-24 h-24 object-cover rounded border-2 border-white shadow-lg"
-            />
-          </div>
-        )}
-
-        {/* Render Signature if available */}
-        {signature && (
-          <div className="absolute bottom-4 right-4">
-            <img
-              src={signature}
-              alt="Signature"
-              className="w-32 h-16 object-contain bg-white rounded border border-slate-200 shadow-sm"
-            />
-          </div>
-        )}
       </div>
     );
   };
@@ -256,13 +235,13 @@ export const IDCardDesigner = ({ selectedStudent: propSelectedStudent }: IDCardD
                 selectedTemplateId={selectedTemplate?.id}
               />
               
-              {/* ID Picture Upload */}
+              {/* ID Picture Upload - Now draggable */}
               <IDPictureUpload
                 onImageUpload={handleIDPictureUpload}
                 currentImage={idPicture}
               />
               
-              {/* Signature Pad */}
+              {/* Signature Pad - Now draggable */}
               <SignaturePad
                 onSignatureChange={handleSignatureChange}
                 width={320}

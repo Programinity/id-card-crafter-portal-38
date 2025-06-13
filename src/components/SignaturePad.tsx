@@ -1,7 +1,8 @@
+
 import React, { useRef, useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Trash2, Download, Signature } from 'lucide-react';
+import { Trash2, Download, Signature, Move } from 'lucide-react';
 
 interface SignaturePadProps {
   onSignatureChange: (signatureDataUrl: string) => void;
@@ -17,6 +18,8 @@ export const SignaturePad: React.FC<SignaturePadProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasSignature, setHasSignature] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [signatureDataUrl, setSignatureDataUrl] = useState<string>('');
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -75,6 +78,7 @@ export const SignaturePad: React.FC<SignaturePadProps> = ({
 
     // Convert to data URL and notify parent
     const dataUrl = canvas.toDataURL('image/png');
+    setSignatureDataUrl(dataUrl);
     onSignatureChange(dataUrl);
   };
 
@@ -89,6 +93,7 @@ export const SignaturePad: React.FC<SignaturePadProps> = ({
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, width, height);
     setHasSignature(false);
+    setSignatureDataUrl('');
     onSignatureChange('');
   };
 
@@ -100,6 +105,21 @@ export const SignaturePad: React.FC<SignaturePadProps> = ({
     link.download = 'signature.png';
     link.href = canvas.toDataURL();
     link.click();
+  };
+
+  const handleDragStart = (event: React.DragEvent) => {
+    if (hasSignature && signatureDataUrl) {
+      setIsDragging(true);
+      event.dataTransfer.setData('application/json', JSON.stringify({
+        type: 'signature',
+        label: 'Signature',
+        imageUrl: signatureDataUrl
+      }));
+    }
+  };
+
+  const handleDragEnd = () => {
+    setIsDragging(false);
   };
 
   return (
@@ -127,16 +147,33 @@ export const SignaturePad: React.FC<SignaturePadProps> = ({
       </div>
       
       <div className="border-2 border-dashed border-slate-300 rounded-lg p-2">
-        <canvas
-          ref={canvasRef}
-          className="border border-slate-200 rounded cursor-crosshair"
-          onMouseDown={startDrawing}
-          onMouseMove={draw}
-          onMouseUp={stopDrawing}
-          onMouseLeave={stopDrawing}
-        />
+        <div
+          className={`relative ${hasSignature ? 'cursor-move' : ''} ${
+            isDragging ? 'opacity-50' : ''
+          }`}
+          draggable={hasSignature}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          <canvas
+            ref={canvasRef}
+            className="border border-slate-200 rounded cursor-crosshair"
+            onMouseDown={startDrawing}
+            onMouseMove={draw}
+            onMouseUp={stopDrawing}
+            onMouseLeave={stopDrawing}
+          />
+          {hasSignature && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 hover:bg-opacity-30 transition-all pointer-events-none">
+              <Move className="w-6 h-6 text-white opacity-0 hover:opacity-100" />
+            </div>
+          )}
+        </div>
         <p className="text-sm text-slate-600 mt-2 text-center">
-          Click and drag to create your signature
+          {hasSignature 
+            ? "Drag signature to place on template" 
+            : "Click and drag to create your signature"
+          }
         </p>
       </div>
     </Card>

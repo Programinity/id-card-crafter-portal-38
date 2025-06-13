@@ -20,6 +20,8 @@ interface TemplateField {
   font_weight: string;
   font_style: string;
   text_decoration: string;
+  side: string;
+  image_url?: string;
 }
 
 interface TemplateCanvasProps {
@@ -61,21 +63,46 @@ export const TemplateCanvas: React.FC<TemplateCanvasProps> = ({
     try {
       const data = JSON.parse(event.dataTransfer.getData('application/json'));
       
-      const newField: TemplateField = {
-        id: generateUUID(),
-        field_type: data.type,
-        field_label: data.field?.label || data.label,
-        x_position: Math.max(0, Math.round(x)),
-        y_position: Math.max(0, Math.round(y)),
-        width: data.type === 'image' ? 120 : 150,
-        height: data.type === 'image' ? 120 : 30,
-        font_size: 14,
-        font_family: 'Arial',
-        font_color: '#000000',
-        font_weight: 'normal',
-        font_style: 'normal',
-        text_decoration: 'none'
-      };
+      let newField: TemplateField;
+
+      if (data.type === 'id_picture' || data.type === 'signature') {
+        // Handle ID picture and signature drops
+        newField = {
+          id: generateUUID(),
+          field_type: 'image',
+          field_label: data.label,
+          x_position: Math.max(0, Math.round(x)),
+          y_position: Math.max(0, Math.round(y)),
+          width: data.type === 'signature' ? 120 : 100,
+          height: data.type === 'signature' ? 60 : 120,
+          font_size: 14,
+          font_family: 'Arial',
+          font_color: '#000000',
+          font_weight: 'normal',
+          font_style: 'normal',
+          text_decoration: 'none',
+          side: side,
+          image_url: data.imageUrl
+        };
+      } else {
+        // Handle regular field drops
+        newField = {
+          id: generateUUID(),
+          field_type: data.type,
+          field_label: data.field?.label || data.label,
+          x_position: Math.max(0, Math.round(x)),
+          y_position: Math.max(0, Math.round(y)),
+          width: data.type === 'image' ? 120 : 150,
+          height: data.type === 'image' ? 120 : 30,
+          font_size: 14,
+          font_family: 'Arial',
+          font_color: '#000000',
+          font_weight: 'normal',
+          font_style: 'normal',
+          text_decoration: 'none',
+          side: side
+        };
+      }
 
       onFieldsChange([...fields, newField]);
       setSelectedField(newField.id);
@@ -386,7 +413,7 @@ const DraggableTemplateField: React.FC<DraggableTemplateFieldProps> = ({
     <div
       className={`absolute cursor-move border-2 ${
         isSelected ? 'border-blue-500 bg-blue-50/20' : 'border-transparent hover:border-slate-400'
-      } ${isDragging ? 'bg-transparent' : ''} rounded transition-all duration-200 select-none`}
+      } ${isDragging ? 'opacity-50' : ''} rounded transition-all duration-200 select-none`}
       style={{
         left: field.x_position,
         top: field.y_position,
@@ -398,9 +425,18 @@ const DraggableTemplateField: React.FC<DraggableTemplateFieldProps> = ({
       tabIndex={0}
     >
       {field.field_type === 'image' ? (
-        <div className="w-full h-full bg-slate-200 rounded flex items-center justify-center text-slate-600 border border-slate-300">
-          📷
-        </div>
+        field.image_url ? (
+          <img
+            src={field.image_url}
+            alt={field.field_label}
+            className="w-full h-full object-cover rounded border border-slate-300"
+            draggable={false}
+          />
+        ) : (
+          <div className="w-full h-full bg-slate-200 rounded flex items-center justify-center text-slate-600 border border-slate-300">
+            📷
+          </div>
+        )
       ) : (
         <div 
           className="w-full h-full flex items-center px-2 overflow-hidden bg-white/80 rounded"
