@@ -9,7 +9,116 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      template_fields: {
+        Row: {
+          created_at: string | null
+          field_label: string
+          field_type: string
+          font_color: string | null
+          font_family: string | null
+          font_size: number | null
+          font_style: string | null
+          font_weight: string | null
+          height: number
+          id: string
+          side: string
+          template_id: string | null
+          text_decoration: string | null
+          width: number
+          x_position: number
+          y_position: number
+        }
+        Insert: {
+          created_at?: string | null
+          field_label: string
+          field_type: string
+          font_color?: string | null
+          font_family?: string | null
+          font_size?: number | null
+          font_style?: string | null
+          font_weight?: string | null
+          height: number
+          id?: string
+          side: string
+          template_id?: string | null
+          text_decoration?: string | null
+          width: number
+          x_position: number
+          y_position: number
+        }
+        Update: {
+          created_at?: string | null
+          field_label?: string
+          field_type?: string
+          font_color?: string | null
+          font_family?: string | null
+          font_size?: number | null
+          font_style?: string | null
+          font_weight?: string | null
+          height?: number
+          id?: string
+          side?: string
+          template_id?: string | null
+          text_decoration?: string | null
+          width?: number
+          x_position?: number
+          y_position?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "template_fields_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      templates: {
+        Row: {
+          back_image_height: number | null
+          back_image_url: string | null
+          back_image_width: number | null
+          created_at: string | null
+          description: string | null
+          front_image_height: number | null
+          front_image_url: string | null
+          front_image_width: number | null
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          back_image_height?: number | null
+          back_image_url?: string | null
+          back_image_width?: number | null
+          created_at?: string | null
+          description?: string | null
+          front_image_height?: number | null
+          front_image_url?: string | null
+          front_image_width?: number | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          back_image_height?: number | null
+          back_image_url?: string | null
+          back_image_width?: number | null
+          created_at?: string | null
+          description?: string | null
+          front_image_height?: number | null
+          front_image_url?: string | null
+          front_image_width?: number | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
