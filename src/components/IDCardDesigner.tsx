@@ -9,14 +9,55 @@ import { TemplateUpload } from './TemplateUpload';
 import { FieldsSidebar } from './FieldsSidebar';
 import { DesignCanvas } from './DesignCanvas';
 import { StudentSelector } from './StudentSelector';
+import { TemplateSelector } from './TemplateSelector';
+import { TemplateFieldsLoader } from './TemplateFieldsLoader';
+import { StudentDataRenderer } from './StudentDataRenderer';
 import { useIDCardStore } from '../store/useIDCardStore';
 
 interface IDCardDesignerProps {
   selectedStudent?: any;
 }
 
+interface Template {
+  id: string;
+  name: string;
+  description: string;
+  front_image_url: string;
+  back_image_url: string;
+  front_image_width: number;
+  front_image_height: number;
+  back_image_width: number;
+  back_image_height: number;
+}
+
+interface TemplateField {
+  id: string;
+  field_type: string;
+  field_label: string;
+  x_position: number;
+  y_position: number;
+  width: number;
+  height: number;
+  font_size: number;
+  font_family: string;
+  font_color: string;
+  font_weight: string;
+  font_style: string;
+  text_decoration: string;
+  side: string;
+}
+
 export const IDCardDesigner = ({ selectedStudent: propSelectedStudent }: IDCardDesignerProps) => {
   const [activeTab, setActiveTab] = useState('front');
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
+  const [templateFields, setTemplateFields] = useState<{
+    front: TemplateField[];
+    back: TemplateField[];
+  }>({
+    front: [],
+    back: []
+  });
+  
   const { 
     frontTemplate, 
     backTemplate, 
@@ -29,6 +70,19 @@ export const IDCardDesigner = ({ selectedStudent: propSelectedStudent }: IDCardD
 
   // Use either the prop student or the store student
   const selectedStudent = propSelectedStudent || storeSelectedStudent;
+
+  const handleTemplateSelect = (template: Template) => {
+    setSelectedTemplate(template);
+    console.log('Template selected:', template);
+  };
+
+  const handleFieldsLoad = useCallback((frontFields: TemplateField[], backFields: TemplateField[]) => {
+    setTemplateFields({
+      front: frontFields,
+      back: backFields
+    });
+    console.log('Template fields loaded:', { frontFields, backFields });
+  }, []);
 
   const handleSaveTemplate = () => {
     saveTemplate();
@@ -45,6 +99,55 @@ export const IDCardDesigner = ({ selectedStudent: propSelectedStudent }: IDCardD
 
   const handlePreview = () => {
     console.log('Preview mode activated');
+  };
+
+  const renderTemplateCanvas = (side: 'front' | 'back') => {
+    const imageUrl = side === 'front' ? selectedTemplate?.front_image_url : selectedTemplate?.back_image_url;
+    const imageWidth = side === 'front' ? selectedTemplate?.front_image_width : selectedTemplate?.back_image_width;
+    const imageHeight = side === 'front' ? selectedTemplate?.front_image_height : selectedTemplate?.back_image_height;
+    const fields = templateFields[side] || [];
+
+    if (!selectedTemplate) {
+      return (
+        <div className="text-center py-12">
+          <div className="text-6xl mb-4">🎨</div>
+          <h3 className="text-xl font-semibold text-slate-800 mb-2">Select a Template</h3>
+          <p className="text-slate-600">Choose a template from the sidebar to get started</p>
+        </div>
+      );
+    }
+
+    return (
+      <div
+        className="relative border-2 border-dashed border-slate-300 rounded-lg bg-slate-50 overflow-hidden mx-auto"
+        style={{
+          width: imageWidth || 600,
+          height: imageHeight || 400,
+          backgroundImage: imageUrl ? `url(${imageUrl})` : 'none',
+          backgroundSize: 'contain',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+      >
+        {!imageUrl && (
+          <div className="absolute inset-0 flex items-center justify-center text-slate-400">
+            <div className="text-center">
+              <div className="text-6xl mb-4">🎨</div>
+              <p className="text-lg font-medium">No image for {side} side</p>
+            </div>
+          </div>
+        )}
+
+        {selectedStudent && fields.length > 0 && (
+          <StudentDataRenderer
+            fields={fields}
+            student={selectedStudent}
+            imageWidth={imageWidth || 600}
+            imageHeight={imageHeight || 400}
+          />
+        )}
+      </div>
+    );
   };
 
   return (
@@ -110,21 +213,30 @@ export const IDCardDesigner = ({ selectedStudent: propSelectedStudent }: IDCardD
         <div className="grid grid-cols-12 gap-6">
           {/* Sidebar */}
           <div className="col-span-3">
-            <Card className="p-4 h-fit">
-              <h3 className="font-semibold text-slate-800 mb-4">Design Tools</h3>
-              <Tabs defaultValue="templates" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="templates">Templates</TabsTrigger>
-                  <TabsTrigger value="fields">Fields</TabsTrigger>
-                </TabsList>
-                <TabsContent value="templates" className="mt-4">
-                  <TemplateUpload />
-                </TabsContent>
-                <TabsContent value="fields" className="mt-4">
-                  <FieldsSidebar />
-                </TabsContent>
-              </Tabs>
-            </Card>
+            <div className="space-y-4">
+              {/* Template Selector */}
+              <TemplateSelector
+                onTemplateSelect={handleTemplateSelect}
+                selectedTemplateId={selectedTemplate?.id}
+              />
+              
+              {/* Design Tools */}
+              <Card className="p-4 h-fit">
+                <h3 className="font-semibold text-slate-800 mb-4">Design Tools</h3>
+                <Tabs defaultValue="templates" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="templates">Templates</TabsTrigger>
+                    <TabsTrigger value="fields">Fields</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="templates" className="mt-4">
+                    <TemplateUpload />
+                  </TabsContent>
+                  <TabsContent value="fields" className="mt-4">
+                    <FieldsSidebar />
+                  </TabsContent>
+                </Tabs>
+              </Card>
+            </div>
           </div>
 
           {/* Main Design Area */}
@@ -145,26 +257,24 @@ export const IDCardDesigner = ({ selectedStudent: propSelectedStudent }: IDCardD
                 </div>
                 
                 <TabsContent value="front">
-                  <DesignCanvas
-                    side="front"
-                    template={frontTemplate}
-                    elements={frontElements}
-                    selectedStudent={selectedStudent}
-                  />
+                  {renderTemplateCanvas('front')}
                 </TabsContent>
                 
                 <TabsContent value="back">
-                  <DesignCanvas
-                    side="back"
-                    template={backTemplate}
-                    elements={backElements}
-                    selectedStudent={selectedStudent}
-                  />
+                  {renderTemplateCanvas('back')}
                 </TabsContent>
               </Tabs>
             </Card>
           </div>
         </div>
+
+        {/* Template Fields Loader */}
+        {selectedTemplate && (
+          <TemplateFieldsLoader
+            templateId={selectedTemplate.id}
+            onFieldsLoad={handleFieldsLoad}
+          />
+        )}
       </div>
     </div>
   );
