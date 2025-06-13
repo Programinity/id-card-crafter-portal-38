@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { User, Mail, Calendar, MapPin, Phone, Hash } from 'lucide-react';
+import { User, Mail, Calendar, MapPin, Phone, Hash, Users, Baby } from 'lucide-react';
 
 const availableFields = [
   { id: 'firstName', label: 'First Name', icon: User },
@@ -13,6 +13,9 @@ const availableFields = [
   { id: 'yearLevel', label: 'Year Level', icon: Calendar },
   { id: 'address', label: 'Address', icon: MapPin },
   { id: 'phone', label: 'Phone', icon: Phone },
+  { id: 'dateOfBirth', label: 'Date of Birth', icon: Baby },
+  { id: 'guardianName', label: 'Guardian Name', icon: Users },
+  { id: 'guardianContactNo', label: 'Guardian Contact No', icon: Phone },
 ];
 
 export const FieldsSidebar = () => {
