@@ -18,12 +18,14 @@ interface IDCardStore {
   backTemplate: string | null;
   frontElements: IDCardElement[];
   backElements: IDCardElement[];
+  selectedStudent: any | null;
   
   setFrontTemplate: (template: string) => void;
   setBackTemplate: (template: string) => void;
   addElement: (side: 'front' | 'back', element: IDCardElement) => void;
   updateElement: (side: 'front' | 'back', elementId: string, updates: Partial<IDCardElement>) => void;
   removeElement: (side: 'front' | 'back', elementId: string) => void;
+  setSelectedStudent: (student: any) => void;
   saveTemplate: () => void;
   exportCard: (student: any) => void;
 }
@@ -33,6 +35,7 @@ export const useIDCardStore = create<IDCardStore>((set, get) => ({
   backTemplate: null,
   frontElements: [],
   backElements: [],
+  selectedStudent: null,
 
   setFrontTemplate: (template) => set({ frontTemplate: template }),
   setBackTemplate: (template) => set({ backTemplate: template }),
@@ -50,6 +53,8 @@ export const useIDCardStore = create<IDCardStore>((set, get) => ({
   removeElement: (side, elementId) => set((state) => ({
     [`${side}Elements`]: (state[`${side}Elements` as keyof typeof state] as IDCardElement[]).filter(el => el.id !== elementId)
   })),
+
+  setSelectedStudent: (student) => set({ selectedStudent: student }),
 
   saveTemplate: () => {
     const { frontTemplate, backTemplate, frontElements, backElements } = get();

@@ -11,17 +11,24 @@ import { DesignCanvas } from './DesignCanvas';
 import { StudentSelector } from './StudentSelector';
 import { useIDCardStore } from '../store/useIDCardStore';
 
-export const IDCardDesigner = () => {
+interface IDCardDesignerProps {
+  selectedStudent?: any;
+}
+
+export const IDCardDesigner = ({ selectedStudent: propSelectedStudent }: IDCardDesignerProps) => {
   const [activeTab, setActiveTab] = useState('front');
-  const [selectedStudent, setSelectedStudent] = useState(null);
   const { 
     frontTemplate, 
     backTemplate, 
     frontElements, 
     backElements,
+    selectedStudent: storeSelectedStudent,
     saveTemplate,
     exportCard 
   } = useIDCardStore();
+
+  // Use either the prop student or the store student
+  const selectedStudent = propSelectedStudent || storeSelectedStudent;
 
   const handleSaveTemplate = () => {
     saveTemplate();
@@ -43,38 +50,62 @@ export const IDCardDesigner = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="container mx-auto p-6">
-        {/* Header */}
-        <div className="mb-8 flex justify-between items-start">
-          <div>
-            <h1 className="text-4xl font-bold text-slate-800 mb-2">ID Card Designer</h1>
-            <p className="text-slate-600">Create and customize professional ID cards with drag-and-drop functionality</p>
-          </div>
-          <Link to="/students">
-            <Button variant="outline" className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              Manage Students
-            </Button>
-          </Link>
-        </div>
+        {/* Header - only show if not passed as prop (i.e., on main designer page) */}
+        {!propSelectedStudent && (
+          <>
+            <div className="mb-8 flex justify-between items-start">
+              <div>
+                <h1 className="text-4xl font-bold text-slate-800 mb-2">ID Card Designer</h1>
+                <p className="text-slate-600">Create and customize professional ID cards with drag-and-drop functionality</p>
+              </div>
+              <Link to="/students">
+                <Button variant="outline" className="flex items-center gap-2">
+                  <Users className="w-4 h-4" />
+                  Manage Students
+                </Button>
+              </Link>
+            </div>
 
-        {/* Action Bar */}
-        <div className="mb-6 flex gap-4 items-center justify-between">
-          <div className="flex gap-3">
-            <Button onClick={handleSaveTemplate} className="bg-blue-600 hover:bg-blue-700">
-              <Save className="w-4 h-4 mr-2" />
-              Save Template
-            </Button>
-            <Button onClick={handlePreview} variant="outline">
-              <Eye className="w-4 h-4 mr-2" />
-              Preview
-            </Button>
-            <Button onClick={handleExportCard} variant="outline">
-              <Download className="w-4 h-4 mr-2" />
-              Export Card
-            </Button>
+            {/* Action Bar */}
+            <div className="mb-6 flex gap-4 items-center justify-between">
+              <div className="flex gap-3">
+                <Button onClick={handleSaveTemplate} className="bg-blue-600 hover:bg-blue-700">
+                  <Save className="w-4 h-4 mr-2" />
+                  Save Template
+                </Button>
+                <Button onClick={handlePreview} variant="outline">
+                  <Eye className="w-4 h-4 mr-2" />
+                  Preview
+                </Button>
+                <Button onClick={handleExportCard} variant="outline">
+                  <Download className="w-4 h-4 mr-2" />
+                  Export Card
+                </Button>
+              </div>
+              <StudentSelector onSelectStudent={() => {}} />
+            </div>
+          </>
+        )}
+
+        {/* Action Bar for Generate ID page */}
+        {propSelectedStudent && (
+          <div className="mb-6 flex gap-4 items-center justify-between">
+            <div className="flex gap-3">
+              <Button onClick={handleSaveTemplate} className="bg-blue-600 hover:bg-blue-700">
+                <Save className="w-4 h-4 mr-2" />
+                Save Template
+              </Button>
+              <Button onClick={handlePreview} variant="outline">
+                <Eye className="w-4 h-4 mr-2" />
+                Preview
+              </Button>
+              <Button onClick={handleExportCard} variant="outline">
+                <Download className="w-4 h-4 mr-2" />
+                Export ID Card
+              </Button>
+            </div>
           </div>
-          <StudentSelector onSelectStudent={setSelectedStudent} />
-        </div>
+        )}
 
         <div className="grid grid-cols-12 gap-6">
           {/* Sidebar */}
@@ -106,7 +137,10 @@ export const IDCardDesigner = () => {
                     <TabsTrigger value="back">Back Side</TabsTrigger>
                   </TabsList>
                   <div className="text-sm text-slate-600">
-                    {selectedStudent ? `Selected: ${selectedStudent.name}` : 'No student selected'}
+                    {selectedStudent ? 
+                      `Selected: ${selectedStudent.first_name} ${selectedStudent.last_name} (${selectedStudent.student_id})` : 
+                      'No student selected'
+                    }
                   </div>
                 </div>
                 

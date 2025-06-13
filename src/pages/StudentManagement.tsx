@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -6,14 +5,15 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
-import { Search, Users, GraduationCap, CreditCard } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Search, Users, GraduationCap, CreditCard, IdCard } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 
 const StudentManagement = () => {
   const [selectedYear, setSelectedYear] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const navigate = useNavigate();
 
   // Fetch school years
   const { data: schoolYears, isLoading: yearsLoading } = useQuery({
@@ -57,6 +57,10 @@ const StudentManagement = () => {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+  };
+
+  const handleGenerateID = (student: any) => {
+    navigate('/generate-id', { state: { student } });
   };
 
   const selectedYearData = schoolYears?.find((year: any) => year.id.toString() === selectedYear);
@@ -188,6 +192,7 @@ const StudentManagement = () => {
                         <TableHead>Course</TableHead>
                         <TableHead>Year Level</TableHead>
                         <TableHead>Status</TableHead>
+                        <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -204,6 +209,16 @@ const StudentManagement = () => {
                             <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
                               Enrolled
                             </span>
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              onClick={() => handleGenerateID(student)}
+                              size="sm"
+                              className="bg-blue-600 hover:bg-blue-700"
+                            >
+                              <IdCard className="w-4 h-4 mr-2" />
+                              Generate ID
+                            </Button>
                           </TableCell>
                         </TableRow>
                       ))}
