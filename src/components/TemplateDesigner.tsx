@@ -266,8 +266,7 @@ export const TemplateDesigner: React.FC<TemplateDesignerProps> = ({
                     style={{
                       width: templateData.frontImageWidth,
                       height: templateData.frontImageHeight,
-                      maxWidth: '100%',
-                      height: 'auto'
+                      maxWidth: '100%'
                     }}
                   />
                   <div className="p-2 bg-slate-50 text-xs text-slate-600">
@@ -302,8 +301,7 @@ export const TemplateDesigner: React.FC<TemplateDesignerProps> = ({
                     style={{
                       width: templateData.backImageWidth,
                       height: templateData.backImageHeight,
-                      maxWidth: '100%',
-                      height: 'auto'
+                      maxWidth: '100%'
                     }}
                   />
                   <div className="p-2 bg-slate-50 text-xs text-slate-600">

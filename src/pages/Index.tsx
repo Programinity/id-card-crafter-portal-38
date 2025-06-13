@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Users, IdCard, FileTemplate, Zap } from "lucide-react";
+import { Users, IdCard, File, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Index = () => {
@@ -19,7 +19,7 @@ const Index = () => {
           <div className="flex gap-4 justify-center">
             <Link to="/templates">
               <Button size="lg" className="text-lg px-8">
-                <FileTemplate className="w-5 h-5 mr-2" />
+                <File className="w-5 h-5 mr-2" />
                 Manage Templates
               </Button>
             </Link>
@@ -36,7 +36,7 @@ const Index = () => {
         <div className="grid md:grid-cols-3 gap-8 mb-16">
           <Card className="p-8 text-center hover:shadow-lg transition-shadow">
             <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <FileTemplate className="w-8 h-8 text-blue-600" />
+              <File className="w-8 h-8 text-blue-600" />
             </div>
             <h3 className="text-xl font-semibold text-slate-800 mb-4">Template Management</h3>
             <p className="text-slate-600 mb-6">
