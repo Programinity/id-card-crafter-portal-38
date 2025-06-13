@@ -1,8 +1,8 @@
-
 import React, { useRef, useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Trash2, Download, Signature, Move } from 'lucide-react';
+import { Trash2, Download, Signature, Move, Crop, Plus } from 'lucide-react';
+import { ImageCropDialog } from './ImageCropDialog';
 
 interface SignaturePadProps {
   onSignatureChange: (signatureDataUrl: string) => void;
@@ -20,6 +20,7 @@ export const SignaturePad: React.FC<SignaturePadProps> = ({
   const [hasSignature, setHasSignature] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [signatureDataUrl, setSignatureDataUrl] = useState<string>('');
+  const [showCropDialog, setShowCropDialog] = useState(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -107,6 +108,43 @@ export const SignaturePad: React.FC<SignaturePadProps> = ({
     link.click();
   };
 
+  const handleCropComplete = (croppedImageUrl: string) => {
+    setSignatureDataUrl(croppedImageUrl);
+    onSignatureChange(croppedImageUrl);
+    
+    // Update the canvas with the cropped image
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    const img = new Image();
+    img.onload = () => {
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, width, height);
+      ctx.drawImage(img, 0, 0, width, height);
+    };
+    img.src = croppedImageUrl;
+  };
+
+  const handleInsert = () => {
+    if (hasSignature && signatureDataUrl) {
+      // Create a custom drag event to insert the signature into the template
+      const dragData = {
+        type: 'signature',
+        label: 'Signature',
+        imageUrl: signatureDataUrl
+      };
+      
+      // Dispatch a custom event that the template canvas can listen to
+      window.dispatchEvent(new CustomEvent('insertElement', { 
+        detail: dragData 
+      }));
+    }
+  };
+
   const handleDragStart = (event: React.DragEvent) => {
     if (hasSignature && signatureDataUrl) {
       setIsDragging(true);
@@ -134,6 +172,14 @@ export const SignaturePad: React.FC<SignaturePadProps> = ({
             disabled={!hasSignature}
           >
             <Trash2 className="w-4 h-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setShowCropDialog(true)}
+            disabled={!hasSignature}
+          >
+            <Crop className="w-4 h-4" />
           </Button>
           <Button
             size="sm"
@@ -169,13 +215,32 @@ export const SignaturePad: React.FC<SignaturePadProps> = ({
             </div>
           )}
         </div>
+        
+        {hasSignature && (
+          <Button
+            size="sm"
+            className="w-full mt-2 bg-blue-600 hover:bg-blue-700"
+            onClick={handleInsert}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Insert to Template
+          </Button>
+        )}
+        
         <p className="text-sm text-slate-600 mt-2 text-center">
           {hasSignature 
-            ? "Drag signature to place on template" 
+            ? "Drag signature to template or click Insert" 
             : "Click and drag to create your signature"
           }
         </p>
       </div>
+
+      <ImageCropDialog
+        isOpen={showCropDialog}
+        onClose={() => setShowCropDialog(false)}
+        imageUrl={signatureDataUrl}
+        onCropComplete={handleCropComplete}
+      />
     </Card>
   );
 };

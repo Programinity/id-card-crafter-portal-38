@@ -2,7 +2,8 @@
 import React, { useRef, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Upload, Camera, Crop, Move } from 'lucide-react';
+import { Upload, Camera, Crop, Move, Plus } from 'lucide-react';
+import { ImageCropDialog } from './ImageCropDialog';
 
 interface IDPictureUploadProps {
   onImageUpload: (imageUrl: string) => void;
@@ -16,6 +17,7 @@ export const IDPictureUpload: React.FC<IDPictureUploadProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string>(currentImage || '');
   const [isDragging, setIsDragging] = useState(false);
+  const [showCropDialog, setShowCropDialog] = useState(false);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -27,6 +29,27 @@ export const IDPictureUpload: React.FC<IDPictureUploadProps> = ({
         onImageUpload(result);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleCropComplete = (croppedImageUrl: string) => {
+    setPreviewUrl(croppedImageUrl);
+    onImageUpload(croppedImageUrl);
+  };
+
+  const handleInsert = () => {
+    if (previewUrl) {
+      // Create a custom drag event to insert the image into the template
+      const dragData = {
+        type: 'id_picture',
+        label: 'ID Picture',
+        imageUrl: previewUrl
+      };
+      
+      // Dispatch a custom event that the template canvas can listen to
+      window.dispatchEvent(new CustomEvent('insertElement', { 
+        detail: dragData 
+      }));
     }
   };
 
@@ -83,13 +106,22 @@ export const IDPictureUpload: React.FC<IDPictureUploadProps> = ({
                 size="sm"
                 variant="outline"
                 className="flex-1"
+                onClick={() => setShowCropDialog(true)}
               >
                 <Crop className="w-4 h-4 mr-1" />
                 Crop
               </Button>
             </div>
+            <Button
+              size="sm"
+              className="w-full mt-2 bg-blue-600 hover:bg-blue-700"
+              onClick={handleInsert}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Insert to Template
+            </Button>
             <p className="text-xs text-slate-600 mt-2 text-center">
-              Drag to place on template
+              Drag to template or click Insert
             </p>
           </div>
         ) : (
@@ -122,6 +154,13 @@ export const IDPictureUpload: React.FC<IDPictureUploadProps> = ({
           </Button>
         )}
       </div>
+
+      <ImageCropDialog
+        isOpen={showCropDialog}
+        onClose={() => setShowCropDialog(false)}
+        imageUrl={previewUrl}
+        onCropComplete={handleCropComplete}
+      />
     </Card>
   );
 };

@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,6 +13,7 @@ import { TemplateFieldsLoader } from './TemplateFieldsLoader';
 import { StudentDataRenderer } from './StudentDataRenderer';
 import { IDPictureUpload } from './IDPictureUpload';
 import { SignaturePad } from './SignaturePad';
+import { DraggableFieldsSidebar } from './DraggableFieldsSidebar';
 import { useIDCardStore } from '../store/useIDCardStore';
 
 interface IDCardDesignerProps {
@@ -235,18 +235,21 @@ export const IDCardDesigner = ({ selectedStudent: propSelectedStudent }: IDCardD
                 selectedTemplateId={selectedTemplate?.id}
               />
               
-              {/* ID Picture Upload - Now draggable */}
+              {/* ID Picture Upload */}
               <IDPictureUpload
                 onImageUpload={handleIDPictureUpload}
                 currentImage={idPicture}
               />
               
-              {/* Signature Pad - Now draggable */}
+              {/* Signature Pad */}
               <SignaturePad
                 onSignatureChange={handleSignatureChange}
                 width={320}
                 height={160}
               />
+              
+              {/* Draggable Fields */}
+              <DraggableFieldsSidebar />
               
               {/* Design Tools */}
               <Card className="p-4 h-fit">

@@ -1,5 +1,4 @@
-
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -43,6 +42,49 @@ export const TemplateCanvas: React.FC<TemplateCanvasProps> = ({
 }) => {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [selectedField, setSelectedField] = useState<string | null>(null);
+
+  // Listen for insert events from ID Picture and Signature components
+  useEffect(() => {
+    const handleInsertElement = (event: CustomEvent) => {
+      const rect = canvasRef.current?.getBoundingClientRect();
+      if (!rect) return;
+
+      // Insert at center of canvas
+      const x = (imageWidth || 600) / 2 - 60;
+      const y = (imageHeight || 400) / 2 - 60;
+
+      const data = event.detail;
+      let newField: TemplateField;
+
+      if (data.type === 'id_picture' || data.type === 'signature') {
+        newField = {
+          id: generateUUID(),
+          field_type: 'image',
+          field_label: data.label,
+          x_position: Math.max(0, Math.round(x)),
+          y_position: Math.max(0, Math.round(y)),
+          width: data.type === 'signature' ? 120 : 100,
+          height: data.type === 'signature' ? 60 : 120,
+          font_size: 14,
+          font_family: 'Arial',
+          font_color: '#000000',
+          font_weight: 'normal',
+          font_style: 'normal',
+          text_decoration: 'none',
+          side: side,
+          image_url: data.imageUrl
+        };
+
+        onFieldsChange([...fields, newField]);
+        setSelectedField(newField.id);
+      }
+    };
+
+    window.addEventListener('insertElement', handleInsertElement as EventListener);
+    return () => {
+      window.removeEventListener('insertElement', handleInsertElement as EventListener);
+    };
+  }, [fields, onFieldsChange, side, imageWidth, imageHeight]);
 
   const generateUUID = () => {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
