@@ -3,7 +3,8 @@ import React, { useState, useRef, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Upload, Download, Save, Eye } from 'lucide-react';
+import { Upload, Download, Save, Eye, Users } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { TemplateUpload } from './TemplateUpload';
 import { FieldsSidebar } from './FieldsSidebar';
 import { DesignCanvas } from './DesignCanvas';
@@ -43,9 +44,17 @@ export const IDCardDesigner = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="container mx-auto p-6">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-slate-800 mb-2">ID Card Designer</h1>
-          <p className="text-slate-600">Create and customize professional ID cards with drag-and-drop functionality</p>
+        <div className="mb-8 flex justify-between items-start">
+          <div>
+            <h1 className="text-4xl font-bold text-slate-800 mb-2">ID Card Designer</h1>
+            <p className="text-slate-600">Create and customize professional ID cards with drag-and-drop functionality</p>
+          </div>
+          <Link to="/students">
+            <Button variant="outline" className="flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              Manage Students
+            </Button>
+          </Link>
         </div>
 
         {/* Action Bar */}
