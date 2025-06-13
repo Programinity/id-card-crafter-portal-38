@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { Search, Users, GraduationCap, CreditCard } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -54,7 +55,33 @@ const StudentManagement = () => {
     setCurrentPage(1); // Reset to first page when searching
   };
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
   const selectedYearData = schoolYears?.find((year: any) => year.id.toString() === selectedYear);
+
+  // Generate page numbers for pagination
+  const generatePageNumbers = () => {
+    if (!studentsData?.meta) return [];
+    
+    const { current_page, last_page } = studentsData.meta;
+    const pages = [];
+    const maxVisiblePages = 5;
+    
+    let startPage = Math.max(1, current_page - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(last_page, startPage + maxVisiblePages - 1);
+    
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    
+    return pages;
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
@@ -138,9 +165,9 @@ const StudentManagement = () => {
                 <Users className="w-6 h-6" />
                 Enrolled Students
               </h2>
-              {studentsData && (
+              {studentsData?.meta && (
                 <div className="text-sm text-slate-600">
-                  Showing {studentsData.data?.length || 0} students
+                  Showing {studentsData.meta.from || 0} to {studentsData.meta.to || 0} of {studentsData.meta.total || 0} students
                 </div>
               )}
             </div>
@@ -150,67 +177,142 @@ const StudentManagement = () => {
                 <div className="text-slate-600">Loading students...</div>
               </div>
             ) : studentsData?.data?.length > 0 ? (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Student ID</TableHead>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Course</TableHead>
-                      <TableHead>Year Level</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {studentsData.data.map((student: any) => (
-                      <TableRow key={student.id}>
-                        <TableCell className="font-medium">{student.student_id}</TableCell>
-                        <TableCell>
-                          {student.first_name} {student.middle_name} {student.last_name}
-                        </TableCell>
-                        <TableCell>{student.email}</TableCell>
-                        <TableCell>{student.course}</TableCell>
-                        <TableCell>{student.year_level}</TableCell>
-                        <TableCell>
-                          <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
-                            Enrolled
-                          </span>
-                        </TableCell>
+              <>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Student ID</TableHead>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Course</TableHead>
+                        <TableHead>Year Level</TableHead>
+                        <TableHead>Status</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                    </TableHeader>
+                    <TableBody>
+                      {studentsData.data.map((student: any) => (
+                        <TableRow key={student.id}>
+                          <TableCell className="font-medium">{student.student_id}</TableCell>
+                          <TableCell>
+                            {student.first_name} {student.middle_name} {student.last_name}
+                          </TableCell>
+                          <TableCell>{student.email}</TableCell>
+                          <TableCell>{student.course}</TableCell>
+                          <TableCell>{student.year_level}</TableCell>
+                          <TableCell>
+                            <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                              Enrolled
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {/* Pagination */}
+                {studentsData?.meta && studentsData.meta.last_page > 1 && (
+                  <div className="mt-6">
+                    <Pagination>
+                      <PaginationContent>
+                        {/* Previous Button */}
+                        <PaginationItem>
+                          <PaginationPrevious 
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              if (studentsData.meta.current_page > 1) {
+                                handlePageChange(studentsData.meta.current_page - 1);
+                              }
+                            }}
+                            className={studentsData.meta.current_page === 1 ? 'pointer-events-none opacity-50' : ''}
+                          />
+                        </PaginationItem>
+
+                        {/* First page if not visible */}
+                        {generatePageNumbers()[0] > 1 && (
+                          <>
+                            <PaginationItem>
+                              <PaginationLink 
+                                href="#" 
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handlePageChange(1);
+                                }}
+                              >
+                                1
+                              </PaginationLink>
+                            </PaginationItem>
+                            {generatePageNumbers()[0] > 2 && (
+                              <PaginationItem>
+                                <PaginationEllipsis />
+                              </PaginationItem>
+                            )}
+                          </>
+                        )}
+
+                        {/* Page Numbers */}
+                        {generatePageNumbers().map((page) => (
+                          <PaginationItem key={page}>
+                            <PaginationLink
+                              href="#"
+                              isActive={page === studentsData.meta.current_page}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handlePageChange(page);
+                              }}
+                            >
+                              {page}
+                            </PaginationLink>
+                          </PaginationItem>
+                        ))}
+
+                        {/* Last page if not visible */}
+                        {generatePageNumbers()[generatePageNumbers().length - 1] < studentsData.meta.last_page && (
+                          <>
+                            {generatePageNumbers()[generatePageNumbers().length - 1] < studentsData.meta.last_page - 1 && (
+                              <PaginationItem>
+                                <PaginationEllipsis />
+                              </PaginationItem>
+                            )}
+                            <PaginationItem>
+                              <PaginationLink 
+                                href="#" 
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handlePageChange(studentsData.meta.last_page);
+                                }}
+                              >
+                                {studentsData.meta.last_page}
+                              </PaginationLink>
+                            </PaginationItem>
+                          </>
+                        )}
+
+                        {/* Next Button */}
+                        <PaginationItem>
+                          <PaginationNext 
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              if (studentsData.meta.current_page < studentsData.meta.last_page) {
+                                handlePageChange(studentsData.meta.current_page + 1);
+                              }
+                            }}
+                            className={studentsData.meta.current_page === studentsData.meta.last_page ? 'pointer-events-none opacity-50' : ''}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  </div>
+                )}
+              </>
             ) : selectedYear ? (
               <div className="text-center py-8">
                 <div className="text-slate-600">No students found for the selected criteria.</div>
               </div>
             ) : null}
-
-            {/* Pagination would go here if needed */}
-            {studentsData?.pagination && (
-              <div className="mt-4 flex justify-center">
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    disabled={currentPage === 1}
-                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                  >
-                    Previous
-                  </Button>
-                  <span className="px-4 py-2 text-sm text-slate-600">
-                    Page {currentPage}
-                  </span>
-                  <Button 
-                    variant="outline"
-                    onClick={() => setCurrentPage(prev => prev + 1)}
-                  >
-                    Next
-                  </Button>
-                </div>
-              </div>
-            )}
           </Card>
         )}
       </div>
