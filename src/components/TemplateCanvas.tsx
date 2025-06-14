@@ -284,6 +284,7 @@ export const TemplateCanvas: React.FC<TemplateCanvasProps> = ({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Arial">Arial</SelectItem>
+                      <SelectItem value="Gotham">Gotham</SelectItem>
                       <SelectItem value="Times New Roman">Times New Roman</SelectItem>
                       <SelectItem value="Helvetica">Helvetica</SelectItem>
                       <SelectItem value="Georgia">Georgia</SelectItem>
