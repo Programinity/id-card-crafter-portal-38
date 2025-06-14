@@ -357,12 +357,14 @@ const DraggableTemplateField: React.FC<DraggableTemplateFieldProps> = ({
   canvasWidth,
   canvasHeight
 }) => {
+  // Local position state for smoother dragging
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0, fieldX: 0, fieldY: 0 });
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
+  const [livePosition, setLivePosition] = useState<{ x: number; y: number } | null>(null);
+  const [liveSize, setLiveSize] = useState<{ width: number; height: number } | null>(null);
 
-  // Ensure latest props for handlers
   useEffect(() => {
     if (isDragging || isResizing) {
       const handleMouseMove = (moveEvent: MouseEvent) => {
@@ -371,19 +373,27 @@ const DraggableTemplateField: React.FC<DraggableTemplateFieldProps> = ({
           const deltaY = moveEvent.clientY - dragStart.y;
           const newX = Math.max(0, Math.min(canvasWidth - field.width, dragStart.fieldX + deltaX));
           const newY = Math.max(0, Math.min(canvasHeight - field.height, dragStart.fieldY + deltaY));
-          onUpdate(field.id, { x_position: newX, y_position: newY });
+          setLivePosition({ x: newX, y: newY });
         } else if (isResizing) {
           const deltaX = moveEvent.clientX - resizeStart.x;
           const deltaY = moveEvent.clientY - resizeStart.y;
           const newWidth = Math.max(50, Math.min(canvasWidth - field.x_position, resizeStart.width + deltaX));
           const newHeight = Math.max(20, Math.min(canvasHeight - field.y_position, resizeStart.height + deltaY));
-          onUpdate(field.id, { width: newWidth, height: newHeight });
+          setLiveSize({ width: newWidth, height: newHeight });
         }
       };
 
       const handleMouseUp = () => {
+        if (isDragging && livePosition) {
+          onUpdate(field.id, { x_position: livePosition.x, y_position: livePosition.y });
+        }
+        if (isResizing && liveSize) {
+          onUpdate(field.id, { width: liveSize.width, height: liveSize.height });
+        }
         setIsDragging(false);
         setIsResizing(false);
+        setLivePosition(null);
+        setLiveSize(null);
         document.removeEventListener('mousemove', handleMouseMove);
         document.removeEventListener('mouseup', handleMouseUp);
       };
@@ -395,14 +405,12 @@ const DraggableTemplateField: React.FC<DraggableTemplateFieldProps> = ({
         document.removeEventListener('mouseup', handleMouseUp);
       };
     }
-  // We want to react to changes in isDragging/isResizing, as well as dragStart/resizeStart/field, so leave these as deps.
-  }, [isDragging, isResizing, dragStart, resizeStart, field, canvasWidth, canvasHeight, onUpdate]);
+  // include all these in deps for latest closures:
+  }, [isDragging, isResizing, dragStart, resizeStart, canvasWidth, canvasHeight, onUpdate, field.id, field.width, field.height, field.x_position, field.y_position, livePosition, liveSize]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-
-    // Prepare for dragging
     setIsDragging(true);
     setDragStart({
       x: e.clientX,
@@ -410,13 +418,13 @@ const DraggableTemplateField: React.FC<DraggableTemplateFieldProps> = ({
       fieldX: field.x_position,
       fieldY: field.y_position
     });
+    setLivePosition(null); // start clean
     onSelect();
   };
 
   const handleResizeMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-
     setIsResizing(true);
     setResizeStart({
       x: e.clientX,
@@ -424,6 +432,7 @@ const DraggableTemplateField: React.FC<DraggableTemplateFieldProps> = ({
       width: field.width,
       height: field.height
     });
+    setLiveSize(null);
     onSelect();
   };
 
@@ -432,6 +441,11 @@ const DraggableTemplateField: React.FC<DraggableTemplateFieldProps> = ({
       onDelete();
     }
   };
+
+  const renderX = livePosition ? livePosition.x : field.x_position;
+  const renderY = livePosition ? livePosition.y : field.y_position;
+  const renderWidth = liveSize ? liveSize.width : field.width;
+  const renderHeight = liveSize ? liveSize.height : field.height;
 
   const textStyle = {
     fontSize: `${field.font_size}px`,
@@ -448,10 +462,11 @@ const DraggableTemplateField: React.FC<DraggableTemplateFieldProps> = ({
         isSelected ? 'border-blue-500 bg-blue-50/20' : 'border-transparent hover:border-slate-400'
       } ${isDragging ? 'opacity-50' : ''} rounded transition-all duration-200 select-none`}
       style={{
-        left: field.x_position,
-        top: field.y_position,
-        width: field.width,
-        height: field.height,
+        left: renderX,
+        top: renderY,
+        width: renderWidth,
+        height: renderHeight,
+        zIndex: isDragging ? 50 : undefined
       }}
       onMouseDown={handleMouseDown}
       onKeyDown={handleKeyDown}
@@ -464,6 +479,7 @@ const DraggableTemplateField: React.FC<DraggableTemplateFieldProps> = ({
             alt={field.field_label}
             className="w-full h-full object-cover rounded border border-slate-300"
             draggable={false}
+            style={{ pointerEvents: 'none' }}
           />
         ) : (
           <div className="w-full h-full bg-slate-200 rounded flex items-center justify-center text-slate-600 border border-slate-300">
@@ -489,3 +505,5 @@ const DraggableTemplateField: React.FC<DraggableTemplateFieldProps> = ({
     </div>
   );
 };
+
+export default TemplateCanvas;
