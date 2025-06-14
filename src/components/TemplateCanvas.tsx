@@ -362,11 +362,47 @@ const DraggableTemplateField: React.FC<DraggableTemplateFieldProps> = ({
   const [dragStart, setDragStart] = useState({ x: 0, y: 0, fieldX: 0, fieldY: 0 });
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
 
+  // Ensure latest props for handlers
+  useEffect(() => {
+    if (isDragging || isResizing) {
+      const handleMouseMove = (moveEvent: MouseEvent) => {
+        if (isDragging) {
+          const deltaX = moveEvent.clientX - dragStart.x;
+          const deltaY = moveEvent.clientY - dragStart.y;
+          const newX = Math.max(0, Math.min(canvasWidth - field.width, dragStart.fieldX + deltaX));
+          const newY = Math.max(0, Math.min(canvasHeight - field.height, dragStart.fieldY + deltaY));
+          onUpdate(field.id, { x_position: newX, y_position: newY });
+        } else if (isResizing) {
+          const deltaX = moveEvent.clientX - resizeStart.x;
+          const deltaY = moveEvent.clientY - resizeStart.y;
+          const newWidth = Math.max(50, Math.min(canvasWidth - field.x_position, resizeStart.width + deltaX));
+          const newHeight = Math.max(20, Math.min(canvasHeight - field.y_position, resizeStart.height + deltaY));
+          onUpdate(field.id, { width: newWidth, height: newHeight });
+        }
+      };
+
+      const handleMouseUp = () => {
+        setIsDragging(false);
+        setIsResizing(false);
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  // We want to react to changes in isDragging/isResizing, as well as dragStart/resizeStart/field, so leave these as deps.
+  }, [isDragging, isResizing, dragStart, resizeStart, field, canvasWidth, canvasHeight, onUpdate]);
+
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
-    // Start dragging
+
+    // Prepare for dragging
     setIsDragging(true);
     setDragStart({
       x: e.clientX,
@@ -375,39 +411,12 @@ const DraggableTemplateField: React.FC<DraggableTemplateFieldProps> = ({
       fieldY: field.y_position
     });
     onSelect();
-
-    // Add global mouse event listeners
-    const handleMouseMove = (moveEvent: MouseEvent) => {
-      if (isDragging) {
-        const deltaX = moveEvent.clientX - dragStart.x;
-        const deltaY = moveEvent.clientY - dragStart.y;
-        const newX = Math.max(0, Math.min(canvasWidth - field.width, dragStart.fieldX + deltaX));
-        const newY = Math.max(0, Math.min(canvasHeight - field.height, dragStart.fieldY + deltaY));
-        onUpdate(field.id, { x_position: newX, y_position: newY });
-      } else if (isResizing) {
-        const deltaX = moveEvent.clientX - resizeStart.x;
-        const deltaY = moveEvent.clientY - resizeStart.y;
-        const newWidth = Math.max(50, Math.min(canvasWidth - field.x_position, resizeStart.width + deltaX));
-        const newHeight = Math.max(20, Math.min(canvasHeight - field.y_position, resizeStart.height + deltaY));
-        onUpdate(field.id, { width: newWidth, height: newHeight });
-      }
-    };
-
-    const handleMouseUp = () => {
-      setIsDragging(false);
-      setIsResizing(false);
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
   };
 
   const handleResizeMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     setIsResizing(true);
     setResizeStart({
       x: e.clientX,
@@ -415,26 +424,7 @@ const DraggableTemplateField: React.FC<DraggableTemplateFieldProps> = ({
       width: field.width,
       height: field.height
     });
-
-    // Add global mouse event listeners for resize
-    const handleMouseMove = (moveEvent: MouseEvent) => {
-      if (isResizing) {
-        const deltaX = moveEvent.clientX - resizeStart.x;
-        const deltaY = moveEvent.clientY - resizeStart.y;
-        const newWidth = Math.max(50, Math.min(canvasWidth - field.x_position, resizeStart.width + deltaX));
-        const newHeight = Math.max(20, Math.min(canvasHeight - field.y_position, resizeStart.height + deltaY));
-        onUpdate(field.id, { width: newWidth, height: newHeight });
-      }
-    };
-
-    const handleMouseUp = () => {
-      setIsResizing(false);
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
+    onSelect();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -488,7 +478,7 @@ const DraggableTemplateField: React.FC<DraggableTemplateFieldProps> = ({
           <span className="truncate w-full">{field.field_label}</span>
         </div>
       )}
-      
+
       {/* Resize Handle */}
       {isSelected && (
         <div
