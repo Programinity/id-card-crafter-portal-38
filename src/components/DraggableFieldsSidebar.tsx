@@ -25,11 +25,14 @@ const fieldTypes: FieldItem[] = [
 
 export const DraggableFieldsSidebar: React.FC = () => {
   const handleDragStart = (event: React.DragEvent, field: FieldItem) => {
+    // Unified drag data format: type, label, field (full info)
     event.dataTransfer.setData('application/json', JSON.stringify({
       type: field.type,
       label: field.label,
       field: field
     }));
+    // For debug
+    // console.log('Dragging from sidebar:', { type: field.type, label: field.label, field });
   };
 
   return (

@@ -131,16 +131,17 @@ export const SignaturePad: React.FC<SignaturePadProps> = ({
 
   const handleInsert = () => {
     if (hasSignature && signatureDataUrl) {
-      // Create a custom drag event to insert the signature into the template
+      // Dispatch event with extra 'side' property
       const dragData = {
         type: 'signature',
         label: 'Signature',
-        imageUrl: signatureDataUrl
+        imageUrl: signatureDataUrl,
+        // NOTE: Adding timestamp to ensure TemplateCanvas picks up new events even if multiple identical inserts happen
+        _insertTime: Date.now(),
       };
-      
-      // Dispatch a custom event that the template canvas can listen to
-      window.dispatchEvent(new CustomEvent('insertElement', { 
-        detail: dragData 
+      console.log("SignaturePad: Dispatching insertElement", dragData);
+      window.dispatchEvent(new CustomEvent('insertElement', {
+        detail: dragData
       }));
     }
   };

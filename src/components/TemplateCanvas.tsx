@@ -54,6 +54,8 @@ export const TemplateCanvas: React.FC<TemplateCanvasProps> = ({
       const y = (imageHeight || 400) / 2 - 60;
 
       const data = event.detail;
+      // For debugging insertion
+      // console.log("TemplateCanvas: Received insert element", data);
       let newField: TemplateField;
 
       if (data.type === 'id_picture' || data.type === 'signature') {
@@ -104,11 +106,10 @@ export const TemplateCanvas: React.FC<TemplateCanvasProps> = ({
 
     try {
       const data = JSON.parse(event.dataTransfer.getData('application/json'));
-      
-      let newField: TemplateField;
+      // console.log('TemplateCanvas: dropped data', data);
 
+      let newField: TemplateField;
       if (data.type === 'id_picture' || data.type === 'signature') {
-        // Handle ID picture and signature drops
         newField = {
           id: generateUUID(),
           field_type: 'image',
@@ -127,7 +128,6 @@ export const TemplateCanvas: React.FC<TemplateCanvasProps> = ({
           image_url: data.imageUrl
         };
       } else {
-        // Handle regular field drops
         newField = {
           id: generateUUID(),
           field_type: data.type,
@@ -149,7 +149,8 @@ export const TemplateCanvas: React.FC<TemplateCanvasProps> = ({
       onFieldsChange([...fields, newField]);
       setSelectedField(newField.id);
     } catch (error) {
-      console.error('Failed to parse drop data:', error);
+      // It's possible another data transfer type was attempted.
+      // console.error('Failed to parse drop data:', error);
     }
   };
 
